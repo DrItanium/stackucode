@@ -22,5 +22,48 @@
 ; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ;-----------------------------------------------------------------------------
-; main.il - main code
+; main.il - microcode entry point
 ;-----------------------------------------------------------------------------
+.code
+ucode_start:
+	set ?max = #xFFFF								; largest available value
+	move ?min = ?zero								; smallest available value
+	set ?two = #2									; hardcoded two
+	set ?three = #3									; hardcoded three
+	set ?memstart = stack_machine_memory_start		; stack machine memory start
+	set ?memend = stack_machine_memory_end			; stack machine memory end
+	set ?opvec = opcode_vector_table				; start of the opcode jump table
+													;
+	move ?stack-first = ?zero						; value of the top of the parameter stack
+	move ?stack-second = ?zero						; value of the second from the top of the parameter stack
+	move ?stack-third = ?zero						; value of the third from the top of the parameter stack
+	set ?stack-rest = parameterstackbase			; pointer to the rest of the pointer stack in memory
+	move ?stack-len = ?zero							; number of elements on the stack
+	set ?fp = #x8000								; The top of the frame
+	;set ?ip	= 
+ucode_done:											; jump to here when we are done or 
+	system #0, ?one, ?one							; standard terminate simulator call
+ucode_panic:										; something bad happened so
+	system #1, ?one, ?one							; panic system call
+
+
+
+
+.data
+; the memory space of the stack machine itself, start at zero and go to 0xEFFF, the remaining 4096 cells are for the stack machine
+.org #x0000
+stack_machine_memory_start:
+parameterstackbase:
+	.word #xFFFF
+.org #x0400				; 1024 entry stack
+program_counter_start:
+
+.org #xFFFE
+stack_machine_memory_end:
+	.word #x0000
+; microcode memory is a separate segment
+.microcode
+; all of the data the microcode uses
+opcode_vector_table:
+	.word #0
+
