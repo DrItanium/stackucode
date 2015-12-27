@@ -25,6 +25,6 @@
 ; ucode.i1 - entry point for microcode
 ; TODO: insert support for including files in the iris1 parser
 ;-----------------------------------------------------------------------------
-#include "lib/system.il"
-#include "lib/string.il"
+#include "lib/system.i1"
+#include "lib/string.i1"
 ;-----------------------------------------------------------------------------
