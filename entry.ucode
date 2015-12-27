@@ -23,10 +23,15 @@
 ; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ;-----------------------------------------------------------------------------
 ; ucode.i1 - entry point for microcode
-; 
-; Use the C preprocessor to handle file inclusion
+;-----------------------------------------------------------------------------
+.code
+.org #x0000
+branch ucode_start							; jump to the true entry point
+;-----------------------------------------------------------------------------
+; Use the C preprocessor to handle file inclusion for everything else
 ;-----------------------------------------------------------------------------
 #include "lib/system.i1"
+#include "src/main.i1"
 ;-----------------------------------------------------------------------------
 ; libraries go last
 ;-----------------------------------------------------------------------------
