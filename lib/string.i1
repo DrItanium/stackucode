@@ -19,95 +19,105 @@
 ; i0: memory location 0
 ; i1: memory location 1
 ; i2: count
-memcmp:								; memcmp (
-	move ?l0 = ?i0					; s1,
-	move ?l1 = ?i1					; s2,
-	move ?l2 = ?i2					; n) {
-									;  set up the locals from the inputs
-	move ?l3 = ?zero				; 	i := 0
-	move ?l4 = ?false				; 	predicate := false
-	move ?l5 = ?zero				; 	ret := 0
-memcmp_loop:						; 	loop {
-	ge   ?l4 = ?l3, ?l2				; 		predicate := (i >= n), really it is i < n
-	move ?l5 = ?zero				; 		ret = 0
-	branch memcmp_done if ?l4		; 		if !predicate then break
-	load ?l6 = ?l0					; 		t0 := *s1
-	load ?l7 = ?l1					; 		t1 := *s2
-	lt ?l4 = ?l6, ?l7				; 		predicate := (t0 < t1)
-	move ?l5 = ?one					; 		ret = 1
-	branch memcmp_done if ?l4		;		if predicate then break
-	gt ?l4 = ?l6, ?l7				; 		predicate := (t0 > t1)
-	move ?l5 = ?two					; 		ret = 2
-	branch memcmp_done if ?l4		; 		if predicate then break
-	incr ?l3 = ?l0					; 		i++
-	incr ?l0 = ?l0					; 		s1++
-	incr ?l1 = ?l1					; 		s2++
-	branch memcmp_loop				; 	}
-memcmp_done:						;
-	move ?o0 = ?l5					; return result
-	return							; }
+;-----------------------------------------------------------------------------
+memcmp:									; memcmp (
+	move ?l0 = ?i0						; s1,
+	move ?l1 = ?i1						; s2,
+	move ?l2 = ?i2						; n) {
+										;  set up the locals from the inputs
+	push ?micro-pred					;
+	move ?l3 = ?zero					; 	i := 0
+	move ?micro-pred = ?false			; 	predicate := false
+	move ?l5 = ?zero					; 	ret := 0
+memcmp_loop:							; 	loop {
+	ge   ?micro-pred = ?l3, ?l2			; 		predicate := (i >= n), really it is i < n
+	move ?l5 = ?zero					; 		ret = 0
+	branch memcmp_done if ?micro-pred	; 		if !predicate then break
+	load ?l6 = ?l0						; 		t0 := *s1
+	load ?l7 = ?l1						; 		t1 := *s2
+	lt ?micro-pred = ?l6, ?l7			; 		predicate := (t0 < t1)
+	move ?l5 = ?one						; 		ret = 1
+	branch memcmp_done if ?micro-pred	;		if predicate then break
+	gt ?micro-pred = ?l6, ?l7			; 		predicate := (t0 > t1)
+	move ?l5 = ?two						; 		ret = 2
+	branch memcmp_done if ?micro-pred	; 		if predicate then break
+	incr ?l3 = ?l0						; 		i++
+	incr ?l0 = ?l0						; 		s1++
+	incr ?l1 = ?l1						; 		s2++
+	branch memcmp_loop					; 	}
+memcmp_done:							;
+	move ?o0 = ?l5						; return result
+	return								; }
 
 ;-----------------------------------------------------------------------------
 ; void* memcpy(void *s1, const void* s2, size_t n);
 ;-----------------------------------------------------------------------------
-;@label memcpy					 ; memcpy (
-;	pop r128 					 ; argument _dest
-;	pop r129 					 ; argument _source
-;	pop r130 					 ; argument n) {
-;	set r132 0 					 ; 	i := 0
-;	move r133 r128 				 ; 	dest := _dest
-;	move r134 r129 				 ; 	source := _source
-;	set r135 0 					 ; 	predicate := false
-;@label memcpy_loop			 	 ; 	loop {
-;	lt r135 r132 r130 			 ; 		predicate := i < n
-;	goto.if0 r134 memcpy_success ; 		if !predicate then break 
-;	load r136 r134 				 ; 		v := *source
-;	store r133 r136 			 ; 		*dest = v
-;	addi r134 r134 1			 ; 		source++
-;	addi r133 r133 1			 ; 		dest++
-;	addi r132 r132 1			 ; 		i++
-;	goto memcpy_loop			 ; 	}
-;@label memcpy_success			 ; 	
-;	pop r131					 ; 	// extract return
-;	push r128					 ; 	return _dest
-;	jump r131					 ; }
-;
-;
-;@label strlen					 ; strlen( 
-;	pop r128					 ; argument _str) {
-;	set r129 0					 ; 	count := 0
-;	move r130 r128				 ; 	str := _str
-;	set r131 0					 ; 	predicate := false
-;	set r132 0					 ; 	terminator := 0
-;	load r133 r130				 ; 	curr := *str
-;@label strlen_loop				 ; 	loop {
-;	ne r131 r133 r132			 ; 		predicate := (curr != terminator)
-;	goto.if0 r131 strlen_done	 ; 		if !predicate then break
-;	addi r130 r130 1			 ; 		str++
-;	load r133 r130				 ; 		curr = *str
-;	addi r129 r129 1			 ; 		count++
-;	goto strlen_loop			 ; 	}
-;@label strlen_done				 ;
-;	pop r134					 ; 	// extract return address
-;	push r129					 ; 	return count
-;	jump r134					 ; }
-;
-;;-----------------------------------------------------------------------------
-;; void printstring(char* s1);
-;;-----------------------------------------------------------------------------
-;@label printstring				 	; printstring {
-;	pop r128					 	; 	argument _s1
-;	move r129 r128				 	; 	s1 := _s1
-;	set r130 0					 	; 	predicate := false
-;	set r131 0					 	; 	terminator := 0
-;@label printstring_loop			 	; 	loop {
-;	load r132 r129				 	; 		curr := *s1
-;	ne r130 r132 r131				; 		predicate = (curr != terminator)
-;	goto.if0 r130 printstring_done 	; 		if !predicate then break
-;	system 2 r132 r132				; 		print curr // special function
-;	addi r129 r129 1				; 		s1++
-;	goto printstring_loop			; 	}
-;@label printstring_done				;
-;	pop r133						; 	return
-;	jump r133						; }
-;
+; i0 - memory location 1
+; i1 - memory location 2
+; i3 - count
+;-----------------------------------------------------------------------------
+memcpy:										; memcpy (
+	move ?l0 = ?i0							; argument _dest
+	move ?l1 = ?i1							; argument _source
+	move ?l2 = ?i2							; argument n) {
+	move ?l3 = ?zero						; i := 0
+	push ?micro-pred						; 
+memcpy_loop:								; loop {
+	ge ?micro-pred = ?l3, ?l2				; predicate := i >= n
+	branch memcpy_success if ?micro-pred 	; if i >= n then break
+	load ?l5 = ?l1							; v := *source
+	store ?l0 = ?l5							; *dest = v
+	incr ?l0 = ?l0							; source++
+	incr ?l1 = ?l1							; dest++
+	incr ?l3 = ?l3							; i++
+	branch memcpy_loop						; }
+memcpy_success:								;
+	pop ?micro-pred							; 
+	move ?o0 = ?l0							; return dest
+	return									; }
+
+
+;-----------------------------------------------------------------------------
+; int strlen(void *s1)
+;-----------------------------------------------------------------------------
+; i0 - string start
+;-----------------------------------------------------------------------------
+strlen:							 		; strlen(
+	move ?l0 = ?i0				 		; argument str) {
+	move ?l1 = ?zero			 		; count := 0
+	push ?micro-pred					;
+	move ?micro-pred = ?false			; predicate = false
+	load ?l2 = ?l0				 		; curr := *str
+strlen_loop:					 		; loop {
+	eq ?micro-pred = ?l2, ?zero			; 	predicate = (curr == terminator)
+	branch strlen_done if ?micro-pred	; 	if curr == terminator then break
+	incr ?l1 = ?l1						; 	count++
+	incr ?l0 = ?l0						; 	str++
+	load ?l2 = ?l0						; 	curr = *str
+	branch strlen_loop					; }
+strlen_done:							;
+	pop ?micro-pred						;
+	move ?o0 = ?l1						; return count
+	return								; }
+	
+;-----------------------------------------------------------------------------
+; void printstring(char* s1);
+;-----------------------------------------------------------------------------
+; i0 - pointer to front of string
+;-----------------------------------------------------------------------------
+printstring:								; printstring (
+	move ?l0 = ?i0							; argument s1
+	push ?micro-pred						; // save predicate
+	move ?micro-pred = ?false				; predicate := false
+printstring_loop:							; loop {
+	load ?l1 = ?l0							; curr := *s1
+	eq ?micro-pred = ?l1, ?zero				; predicate = curr == 0
+	branch printstring_done if ?micro-pred	; if predicate then break
+	system #2, ?l1, ?l1						; print curr
+	incr ?l0 = ?l0							; s1++
+	branch printstring_loop					; }
+printstring_done:							;
+	pop ?micro-pred							; // restore the previous micro predicate
+	return							 		; }
+
+; vim: set tw=0
