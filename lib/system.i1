@@ -52,6 +52,7 @@
 .alias stack-len = r17
 .alias fp = r18
 .alias ip = r19
+.alias ifp = r20		; indirect function pointer
 ;-----------------------------------------------------------------------------
 ; Storage ranges
 ; r32-r63 : Output Registers (o0-o31)
