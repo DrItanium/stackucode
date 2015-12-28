@@ -50,8 +50,8 @@ memcmp:									; memcmp (
 	move ?l0 = ?i0						; s1,
 	move ?l1 = ?i1						; s2,
 	move ?l2 = ?i2						; n, 
-										; m0seg,
-										; m1seg) {
+	move ?l8 = ?i3						; m0seg,
+	move ?l9 = ?i4						; m1seg) {
 										;  set up the locals from the inputs
 	push ?micro-pred					;
 	move ?l3 = ?zero					; 	i := 0
@@ -61,8 +61,14 @@ memcmp_loop:							; 	loop {
 	ge   ?micro-pred = ?l3, ?l2			; 		predicate := (i >= n), really it is i < n
 	move ?l5 = ?zero					; 		ret = 0
 	branch memcmp_done if ?micro-pred	; 		if !predicate then break
-	load ?l6 = ?l0						; 		t0 := *s1
-	load ?l7 = ?l1						; 		t1 := *s2
+	move ?i0 = ?l0						;
+	move ?i1 = ?l8						;
+	call load_generic					;
+	move ?l6 = ?o0 						; 		t1 := *s2
+	move ?i0 = ?l1						;
+	move ?i1 = ?l9						;
+	call load_generic					;
+	move ?l7 = ?o0						; 		t0 := *s1
 	lt ?micro-pred = ?l6, ?l7			; 		predicate := (t0 < t1)
 	move ?l5 = ?one						; 		ret = 1
 	branch memcmp_done if ?micro-pred	;		if predicate then break
