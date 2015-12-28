@@ -39,8 +39,8 @@ ucode_start:
 	move ?stack-third = ?zero						; value of the third from the top of the parameter stack
 	set ?stack-rest = parameterstackbase			; pointer to the rest of the pointer stack in memory
 	move ?stack-len = ?zero							; number of elements on the stack
-	set ?fp = #x8000								; The top of the frame
-	;set ?ip	= 
+	move ?fp = ?zero 								; The top of the frame
+	set ?ip	= program_counter_start					; start of the system program counter in memory
 ucode_done:											; jump to here when we are done or 
 	system #0, ?one, ?one							; standard terminate simulator call
 ucode_panic:										; something bad happened so
@@ -49,21 +49,18 @@ ucode_panic:										; something bad happened so
 
 
 
-.data
+.microcode
+; microcode memory is a separate segment
+; all of the data the microcode uses
+opcode_vector_table:
+	.word #0
 ; the memory space of the stack machine itself, start at zero and go to 0xEFFF, the remaining 4096 cells are for the stack machine
-.org #x0000
 stack_machine_memory_start:
 parameterstackbase:
 	.word #xFFFF
 .org #x0400				; 1024 entry stack
 program_counter_start:
 
-.org #xFFFE
+.org #xFFFF
 stack_machine_memory_end:
 	.word #x0000
-; microcode memory is a separate segment
-.microcode
-; all of the data the microcode uses
-opcode_vector_table:
-	.word #0
-

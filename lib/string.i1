@@ -42,12 +42,16 @@
 ; i0: memory location 0
 ; i1: memory location 1
 ; i2: count
+; i3: memory location 0 segment
+; i4: memory location 1 segment
 ;-----------------------------------------------------------------------------
 .code
 memcmp:									; memcmp (
 	move ?l0 = ?i0						; s1,
 	move ?l1 = ?i1						; s2,
-	move ?l2 = ?i2						; n) {
+	move ?l2 = ?i2						; n, 
+										; m0seg,
+										; m1seg) {
 										;  set up the locals from the inputs
 	push ?micro-pred					;
 	move ?l3 = ?zero					; 	i := 0
